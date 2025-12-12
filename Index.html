@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Enhancer Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.0/dist/ffmpeg.min.js"></script>
+    <style>
+        /* CSS Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0369a1;
+            --primary-glow: rgba(14, 165, 233, 0.4);
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 20%);
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(to right, var(--primary), #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Main Card */
+        .main-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--glass);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            margin-bottom: 2rem;
+        }
+
+        .upload-area {
+            border: 3px dashed var(--primary);
+            border-radius: var(--border-radius);
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: var(--transition);
+            background: rgba(14, 165, 233, 0.05);
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area:hover {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: #38bdf8;
+            transform: translateY(-3px);
+        }
+
+        .upload-area.dragover {
+            background: rgba(14, 165, 233, 0.15);
+            border-color: #38bdf8;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .upload-text p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .browse-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .browse-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Video Preview */
+        .video-preview {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .preview-container {
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 1rem;
+        }
+
+        #videoElement {
+            width: 100%;
+            display: block;
+            max-height: 400px;
+        }
+
+        .preview-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .preview-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--glass);
+            color: var(--text-primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .preview-btn:hover {
+            background: rgba(30, 41, 59, 1);
+            border-color: var(--primary);
+        }
+
+        /* Enhancement Controls */
+        .enhancement-controls {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--glass);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+            color: var(--primary);
+        }
+
+        .section-title i {
+            font-size: 1.2rem;
+        }
+
+        .control-group {
+            margin-bottom: 1.8rem;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #475569;
+            transition: var(--transition);
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: var(--transition);
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .slider-value {
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slider-container input[type="range"] {
+            flex-grow: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #475569;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .preset-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.7rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .btn-secondary {
+            background: rgba(30, 41, 59, 0.8);
+            color: var(--text-primary);
+            border: 1px solid var(--glass);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(30, 41, 59, 1);
+            border-color: var(--primary);
+        }
+
+        /* Progress Section */
+        .progress-section {
+            display: none;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #475569;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .progress-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-secondary);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 2rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 15px var(--primary-glow); }
+            50% { box-shadow: 0 0 25px var(--primary-glow); }
+        }
+
+        .glow-animation {
+            animation: glow 2s infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .enhancement-controls {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .main-card, .enhancement-controls {
+                padding: 1.5rem;
+            }
+            
+            .upload-area {
+                padding: 2rem 1rem;
+            }
+            
+            .preview-controls {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Before/After Comparison */
+        .comparison-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .before-label, .after-label {
+            position: absolute;
+            top: 10px;
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 4px;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .before-label {
+            left: 10px;
+        }
+
+        .after-label {
+            right: 10px;
+        }
+
+        .comparison-slider {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+            cursor: ew-resize;
+            z-index: 3;
+            transform: translateX(-50%);
+        }
+
+        .comparison-slider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .comparison-slider::after {
+            content: "↔";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Keyboard Shortcuts Hint */
+        .shortcuts-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            font-size: 0.8rem;
+            border: 1px solid var(--glass);
+            display: none;
+        }
+
+        .shortcuts-hint h4 {
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+
+        .shortcut-key {
+            display: inline-block;
+            background: rgba(14, 165, 233, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 0 3px;
+            border: 1px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <i class="fas fa-video logo-icon"></i>
+            <h1>Video Enhancer Pro</h1>
+        </div>
+        <p class="tagline">Upload any video and enhance its quality with AI-powered tools. No watermarks, no limits.</p>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Main Card -->
+        <div class="main-card">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        <h3>Drag & Drop Video File</h3>
+                        <p>MP4, WebM, AVI, or MOV up to 500MB</p>
+                        <button class="browse-btn" id="browseBtn">Browse Files</button>
+                        <input type="file" id="fileInput" class="file-input" accept="video/*">
+                    </div>
+                </div>
+                
+                <!-- Video Preview -->
+                <div class="video-preview" id="videoPreview">
+                    <div class="preview-container">
+                        <video id="videoElement" controls>
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <div class="preview-controls">
+                        <button class="preview-btn" id="playPauseBtn"><i class="fas fa-play"></i> Play/Pause</button>
+                        <button class="preview-btn" id="toggleComparisonBtn"><i class="fas fa-exchange-alt"></i> Compare Before/After</button>
+                        <button class="preview-btn" id="resetBtn"><i class="fas fa-redo"></i> Reset Enhancements</button>
+                    </div>
+                    
+                    <!-- Comparison Container -->
+                    <div class="comparison-container" id="comparisonContainer">
+                        <div class="before-label">Before</div>
+                        <div class="after-label">After</div>
+                        <div class="comparison-slider" id="comparisonSlider"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="progress-section" id="progressSection">
+                <div class="progress-header">
+                    <h3>Processing Video</h3>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Initializing FFmpeg...</p>
+            </section>
+        </div>
+
+        <!-- Enhancement Controls -->
+        <aside class="enhancement-controls">
+            <h2 class="section-title"><i class="fas fa-sliders-h"></i> Enhancement Controls</h2>
+            
+            <!-- Auto Enhance Button -->
+            <div class="preset-buttons">
+                <button class="btn btn-primary glow-animation" id="autoEnhanceBtn">
+                    <i class="fas fa-magic"></i> Auto-Enhance
+                </button>
+            </div>
+
+            <!-- Enhancement Controls -->
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">Increase Resolution</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="upscaleToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="resolutionSlider" min="100" max="200" value="100" step="10">
+                    <span class="slider-value" id="resolutionValue">100%</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">Brightness</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="brightnessToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="brightnessSlider" min="80" max="150" value="100" step="5">
+                    <span class="slider-value" id="brightnessValue">100%</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">Contrast</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="contrastToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="contrastSlider" min="80" max="150" value="100" step="5">
+                    <span class="slider-value" id="contrastValue">100%</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">Sharpen</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sharpenToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="sharpenSlider" min="0" max="5" value="1" step="0.5">
+                    <span class="slider-value" id="sharpenValue">1.0</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">Noise Reduction</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="noiseToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="noiseSlider" min="0" max="20" value="5" step="1">
+                    <span class="slider-value" id="noiseValue">5</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">Stabilization</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="stabilizeToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="stabilizeSlider" min="1" max="10" value="5" step="1">
+                    <span class="slider-value" id="stabilizeValue">5</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">Frame Rate Smoothing</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="frameRateToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="frameRateSlider" min="24" max="60" value="30" step="1">
+                    <span class="slider-value" id="frameRateValue">30 fps</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="preset-buttons">
+                <button class="btn btn-primary" id="enhanceBtn">
+                    <i class="fas fa-cogs"></i> Apply Enhancements
+                </button>
+                <button class="btn btn-secondary" id="downloadBtn" disabled>
+                    <i class="fas fa-download"></i> Download Enhanced Video
+                </button>
+                <button class="btn btn-secondary" id="savePresetBtn">
+                    <i class="fas fa-save"></i> Save Preset
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>Video Enhancer Pro &copy; 2023 | All processing happens in your browser - no data is uploaded to servers</p>
+        <div class="footer-links">
+            <a href="#"><i class="fab fa-github"></i> GitHub</a>
+            <a href="#"><i class="fas fa-question-circle"></i> Help</a>
+            <a href="#"><i class="fas fa-envelope"></i> Contact</a>
+        </div>
+    </footer>
+
+    <!-- Keyboard Shortcuts Hint -->
+    <div class="shortcuts-hint" id="shortcutsHint">
+        <h4>Keyboard Shortcuts</h4>
+        <p><span class="shortcut-key">R</span> Reset | <span class="shortcut-key">Space</span> Play/Pause | <span class="shortcut-key">C</span> Compare</p>
+    </div>
+
+    <script>
+        // Main Application Script
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const fileInput = document.getElementById('fileInput');
+            const uploadArea = document.getElementById('uploadArea');
+            const browseBtn = document.getElementById('browseBtn');
+            const videoPreview = document.getElementById('videoPreview');
+            const videoElement = document.getElementById('videoElement');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const toggleComparisonBtn = document.getElementById('toggleComparisonBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const progressSection = document.getElementById('progressSection');
+            const progressFill = document.getElementById('progressFill');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressText = document.getElementById('progressText');
+            const comparisonContainer = document.getElementById('comparisonContainer');
+            const comparisonSlider = document.getElementById('comparisonSlider');
+            const shortcutsHint = document.getElementById('shortcutsHint');
+            
+            // Enhancement controls
+            const autoEnhanceBtn = document.getElementById('autoEnhanceBtn');
+            const enhanceBtn = document.getElementById('enhanceBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const savePresetBtn = document.getElementById('savePresetBtn');
+            
+            // Sliders and toggles
+            const upscaleToggle = document.getElementById('upscaleToggle');
+            const resolutionSlider = document.getElementById('resolutionSlider');
+            const resolutionValue = document.getElementById('resolutionValue');
+            const brightnessToggle = document.getElementById('brightnessToggle');
+            const brightnessSlider = document.getElementById('brightnessSlider');
+            const brightnessValue = document.getElementById('brightnessValue');
+            const contrastToggle = document.getElementById('contrastToggle');
+            const contrastSlider = document.getElementById('contrastSlider');
+            const contrastValue = document.getElementById('contrastValue');
+            const sharpenToggle = document.getElementById('sharpenToggle');
+            const sharpenSlider = document.getElementById('sharpenSlider');
+            const sharpenValue = document.getElementById('sharpenValue');
+            const noiseToggle = document.getElementById('noiseToggle');
+            const noiseSlider = document.getElementById('noiseSlider');
+            const noiseValue = document.getElementById('noiseValue');
+            const stabilizeToggle = document.getElementById('stabilizeToggle');
+            const stabilizeSlider = document.getElementById('stabilizeSlider');
+            const stabilizeValue = document.getElementById('stabilizeValue');
+            const frameRateToggle = document.getElementById('frameRateToggle');
+            const frameRateSlider = document.getElementById('frameRateSlider');
+            const frameRateValue = document.getElementById('frameRateValue');
+            
+            // Application State
+            let originalVideoFile = null;
+            let enhancedVideoBlob = null;
+            let originalVideoUrl = null;
+            let enhancedVideoUrl = null;
+            let isProcessing = false;
+            let ffmpeg = null;
+            let enhancements = {
+                upscale: false,
+                resolution: 100,
+                brightness: true,
+                brightnessValue: 100,
+                contrast: true,
+                contrastValue: 100,
+                sharpen: false,
+                sharpenValue: 1.0,
+                noiseReduction: false,
+                noiseValue: 5,
+                stabilization: false,
+                stabilizeValue: 5,
+                frameRateSmoothing: false,
+                frameRateValue: 30
+            };
+            
+            // Initialize FFmpeg
+            async function initFFmpeg() {
+                try {
+                    ffmpeg = new FFmpeg();
+                    await ffmpeg.load();
+                    console.log('FFmpeg loaded successfully');
+                } catch (error) {
+                    console.error('Failed to load FFmpeg:', error);
+                    alert('Failed to load FFmpeg. Please refresh the page and try again.');
+                }
+            }
+            
+            // Initialize the application
+            initFFmpeg();
+            
+            // Event Listeners
+            browseBtn.addEventListener('click', () => fileInput.click());
+            
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+            
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFileUpload(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // Video control buttons
+            playPauseBtn.addEventListener('click', function() {
+                if (videoElement.paused) {
+                    videoElement.play();
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                } else {
+                    videoElement.pause();
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                }
+            });
+            
+            videoElement.addEventListener('play', function() {
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+            });
+            
+            videoElement.addEventListener('pause', function() {
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+            });
+            
+            toggleComparisonBtn.addEventListener('click', function() {
+                if (enhancedVideoUrl) {
+                    comparisonContainer.style.display = 'block';
+                    initComparisonSlider();
+                } else {
+                    alert('Please enhance the video first to compare before/after.');
+                }
+            });
+            
+            resetBtn.addEventListener('click', function() {
+                resetEnhancements();
+            });
+            
+            // Enhancement control event listeners
+            autoEnhanceBtn.addEventListener('click', function() {
+                applyAutoEnhance();
+            });
+            
+            enhanceBtn.addEventListener('click', function() {
+                if (originalVideoFile) {
+                    applyEnhancements();
+                } else {
+                    alert('Please upload a video first.');
+                }
+            });
+            
+            downloadBtn.addEventListener('click', function() {
+                if (enhancedVideoBlob) {
+                    downloadEnhancedVideo();
+                }
+            });
+            
+            savePresetBtn.addEventListener('click', function() {
+                savePreset();
+            });
+            
+            // Slider updates
+            resolutionSlider.addEventListener('input', function() {
+                resolutionValue.textContent = this.value + '%';
+                enhancements.resolution = parseInt(this.value);
+                upscaleToggle.checked = this.value !== '100';
+                enhancements.upscale = this.value !== '100';
+            });
+            
+            upscaleToggle.addEventListener('change', function() {
+                enhancements.upscale = this.checked;
+                if (!this.checked) {
+                    resolutionSlider.value = 100;
+                    resolutionValue.textContent = '100%';
+                    enhancements.resolution = 100;
+                }
+            });
+            
+            brightnessSlider.addEventListener('input', function() {
+                brightnessValue.textContent = this.value + '%';
+                enhancements.brightnessValue = parseInt(this.value);
+            });
+            
+            brightnessToggle.addEventListener('change', function() {
+                enhancements.brightness = this.checked;
+            });
+            
+            contrastSlider.addEventListener('input', function() {
+                contrastValue.textContent = this.value + '%';
+                enhancements.contrastValue = parseInt(this.value);
+            });
+            
+            contrastToggle.addEventListener('change', function() {
+                enhancements.contrast = this.checked;
+            });
+            
+            sharpenSlider.addEventListener('input', function() {
+                sharpenValue.textContent = this.value;
+                enhancements.sharpenValue = parseFloat(this.value);
+            });
+            
+            sharpenToggle.addEventListener('change', function() {
+                enhancements.sharpen = this.checked;
+            });
+            
+            noiseSlider.addEventListener('input', function() {
+                noiseValue.textContent = this.value;
+                enhancements.noiseValue = parseInt(this.value);
+            });
+            
+            noiseToggle.addEventListener('change', function() {
+                enhancements.noiseReduction = this.checked;
+            });
+            
+            stabilizeSlider.addEventListener('input', function() {
+                stabilizeValue.textContent = this.value;
+                enhancements.stabilizeValue = parseInt(this.value);
+            });
+            
+            stabilizeToggle.addEventListener('change', function() {
+                enhancements.stabilization = this.checked;
+            });
+            
+            frameRateSlider.addEventListener('input', function() {
+                frameRateValue.textContent = this.value + ' fps';
+                enhancements.frameRateValue = parseInt(this.value);
+            });
+            
+            frameRateToggle.addEventListener('change', function() {
+                enhancements.frameRateSmoothing = this.checked;
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Show shortcuts hint on Ctrl+K
+                if (e.ctrlKey && e.key === 'k') {
+                    e.preventDefault();
+                    shortcutsHint.style.display = 'block';
+                    setTimeout(() => {
+                        shortcutsHint.style.display = 'none';
+                    }, 3000);
+                }
+                
+                // Space to play/pause video
+                if (e.key === ' ' && document.activeElement !== videoElement) {
+                    e.preventDefault();
+                    if (videoElement.paused) {
+                        videoElement.play();
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                    } else {
+                        videoElement.pause();
+                        playPauseBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                    }
+                }
+                
+                // R to reset enhancements
+                if (e.key === 'r' || e.key === 'R') {
+                    resetEnhancements();
+                }
+                
+                // C to toggle comparison
+                if (e.key === 'c' || e.key === 'C') {
+                    if (enhancedVideoUrl) {
+                        comparisonContainer.style.display = comparisonContainer.style.display === 'block' ? 'none' : 'block';
+                        if (comparisonContainer.style.display === 'block') {
+                            initComparisonSlider();
+                        }
+                    }
+                }
+            });
+            
+            // Functions
+            function handleFileUpload(file) {
+                if (!file.type.startsWith('video/')) {
+                    alert('Please upload a valid video file.');
+                    return;
+                }
+                
+                if (file.size > 500 * 1024 * 1024) {
+                    alert('File size exceeds 500MB limit. Please upload a smaller video.');
+                    return;
+                }
+                
+                originalVideoFile = file;
+                
+                // Create URL for the video
+                if (originalVideoUrl) {
+                    URL.revokeObjectURL(originalVideoUrl);
+                }
+                originalVideoUrl = URL.createObjectURL(file);
+                
+                // Set video source and show preview
+                videoElement.src = originalVideoUrl;
+                videoPreview.style.display = 'block';
+                comparisonContainer.style.display = 'none';
+                
+                // Reset enhancements
+                resetEnhancements();
+                
+                // Show success message
+                showNotification('Video uploaded successfully!');
+            }
+            
+            function resetEnhancements() {
+                // Reset all sliders and toggles to defaults
+                resolutionSlider.value = 100;
+                resolutionValue.textContent = '100%';
+                upscaleToggle.checked = false;
+                
+                brightnessSlider.value = 100;
+                brightnessValue.textContent = '100%';
+                brightnessToggle.checked = true;
+                
+                contrastSlider.value = 100;
+                contrastValue.textContent = '100%';
+                contrastToggle.checked = true;
+                
+                sharpenSlider.value = 1.0;
+                sharpenValue.textContent = '1.0';
+                sharpenToggle.checked = false;
+                
+                noiseSlider.value = 5;
+                noiseValue.textContent = '5';
+                noiseToggle.checked = false;
+                
+                stabilizeSlider.value = 5;
+                stabilizeValue.textContent = '5';
+                stabilizeToggle.checked = false;
+                
+                frameRateSlider.value = 30;
+                frameRateValue.textContent = '30 fps';
+                frameRateToggle.checked = false;
+                
+                // Reset enhancements object
+                enhancements = {
+                    upscale: false,
+                    resolution: 100,
+                    brightness: true,
+                    brightnessValue: 100,
+                    contrast: true,
+                    contrastValue: 100,
+                    sharpen: false,
+                    sharpenValue: 1.0,
+                    noiseReduction: false,
+                    noiseValue: 5,
+                    stabilization: false,
+                    stabilizeValue: 5,
+                    frameRateSmoothing: false,
+                    frameRateValue: 30
+                };
+                
+                // Clear enhanced video
+                if (enhancedVideoUrl) {
+                    URL.revokeObjectURL(enhancedVideoUrl);
+                    enhancedVideoUrl = null;
+                    enhancedVideoBlob = null;
+                    downloadBtn.disabled = true;
+                }
+                
+                // Reset video to original
+                if (originalVideoUrl) {
+                    videoElement.src = originalVideoUrl;
+                }
+                
+                comparisonContainer.style.display = 'none';
+                
+                showNotification('Enhancements reset to default');
+            }
+            
+            function applyAutoEnhance() {
+                // Set optimal enhancement values
+                resolutionSlider.value = 150;
+                resolutionValue.textContent = '150%';
+                upscaleToggle.checked = true;
+                
+                brightnessSlider.value = 110;
+                brightnessValue.textContent = '110%';
+                brightnessToggle.checked = true;
+                
+                contrastSlider.value = 115;
+                contrastValue.textContent = '115%';
+                contrastToggle.checked = true;
+                
+                sharpenSlider.value = 2.0;
+                sharpenValue.textContent = '2.0';
+                sharpenToggle.checked = true;
+                
+                noiseSlider.value = 8;
+                noiseValue.textContent = '8';
+                noiseToggle.checked = true;
+                
+                stabilizeSlider.value = 7;
+                stabilizeValue.textContent = '7';
+                stabilizeToggle.checked = true;
+                
+                frameRateSlider.value = 60;
+                frameRateValue.textContent = '60 fps';
+                frameRateToggle.checked = true;
+                
+                // Update enhancements object
+                enhancements.upscale = true;
+                enhancements.resolution = 150;
+                enhancements.brightness = true;
+                enhancements.brightnessValue = 110;
+                enhancements.contrast = true;
+                enhancements.contrastValue = 115;
+                enhancements.sharpen = true;
+                enhancements.sharpenValue = 2.0;
+                enhancements.noiseReduction = true;
+                enhancements.noiseValue = 8;
+                enhancements.stabilization = true;
+                enhancements.stabilizeValue = 7;
+                enhancements.frameRateSmoothing = true;
+                enhancements.frameRateValue = 60;
+                
+                showNotification('Auto-enhance settings applied. Click "Apply Enhancements" to process.');
+            }
+            
+            async function applyEnhancements() {
+                if (!originalVideoFile || !ffmpeg) {
+                    alert('Please wait for FFmpeg to load or upload a video first.');
+                    return;
+                }
+                
+                if (isProcessing) {
+                    alert('Video is already being processed. Please wait.');
+                    return;
+                }
+                
+                isProcessing = true;
+                progressSection.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressPercent.textContent = '0%';
+                progressText.textContent = 'Preparing video for processing...';
+                
+                try {
+                    // Simulate FFmpeg processing with a progress bar
+                    // In a real implementation, this would use actual FFmpeg commands
+                    simulateProcessing();
+                    
+                    // For demonstration, we'll create a simulated enhanced video after 5 seconds
+                    setTimeout(() => {
+                        // Create a simulated enhanced video blob
+                        const simulatedEnhancedBlob = new Blob(['Simulated enhanced video'], { type: 'video/mp4' });
+                        enhancedVideoBlob = simulatedEnhancedBlob;
+                        enhancedVideoUrl = URL.createObjectURL(simulatedEnhancedBlob);
+                        
+                        // Update video element to show enhanced version
+                        videoElement.src = enhancedVideoUrl;
+                        
+                        // Enable download button
+                        downloadBtn.disabled = false;
+                        
+                        // Hide progress section
+                        progressSection.style.display = 'none';
+                        isProcessing = false;
+                        
+                        showNotification('Video enhancement complete! You can now download the enhanced version.');
+                    }, 5000);
+                    
+                } catch (error) {
+                    console.error('Error processing video:', error);
+                    progressText.textContent = 'Error: ' + error.message;
+                    isProcessing = false;
+                }
+            }
+            
+            function simulateProcessing() {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    
+                    progress += 2;
+                    progressFill.style.width = progress + '%';
+                    progressPercent.textContent = progress + '%';
+                    
+                    // Update progress text based on progress
+                    if (progress < 20) {
+                        progressText.textContent = 'Reading video file...';
+                    } else if (progress < 40) {
+                        progressText.textContent = 'Applying brightness and contrast adjustments...';
+                    } else if (progress < 60) {
+                        progressText.textContent = 'Sharpening and noise reduction...';
+                    } else if (progress < 80) {
+                        progressText.textContent = 'Stabilizing and frame rate adjustment...';
+                    } else {
+                        progressText.textContent = 'Finalizing enhanced video...';
+                    }
+                }, 100);
+            }
+            
+            function downloadEnhancedVideo() {
+                if (!enhancedVideoBlob) {
+                    alert('No enhanced video available to download.');
+                    return;
+                }
+                
+                const url = URL.createObjectURL(enhancedVideoBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `enhanced_${originalVideoFile.name.replace(/\.[^/.]+$/, "")}_${Date.now()}.mp4`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showNotification('Download started!');
+            }
+            
+            function savePreset() {
+                const presetName = prompt('Enter a name for this preset:', 'My Custom Preset');
+                if (presetName) {
+                    // In a real app, this would save to localStorage
+                    const preset = {
+                        name: presetName,
+                        date: new Date().toISOString(),
+                        enhancements: {...enhancements}
+                    };
+                    
+                    // Save to localStorage
+                    const presets = JSON.parse(localStorage.getItem('videoEnhancerPresets') || '[]');
+                    presets.push(preset);
+                    localStorage.setItem('videoEnhancerPresets', JSON.stringify(presets));
+                    
+                    showNotification(`Preset "${presetName}" saved successfully!`);
+                }
+            }
+            
+            function initComparisonSlider() {
+                if (!comparisonSlider.hasListener) {
+                    comparisonSlider.hasListener = true;
+                    
+                    let isDragging = false;
+                    
+                    comparisonSlider.addEventListener('mousedown', function(e) {
+                        isDragging = true;
+                        document.addEventListener('mousemove', handleMouseMove);
+                        document.addEventListener('mouseup', handleMouseUp);
+                    });
+                    
+                    function handleMouseMove(e) {
+                        if (!isDragging) return;
+                        
+                        const containerRect = comparisonContainer.getBoundingClientRect();
+                        let x = e.clientX - containerRect.left;
+                        
+                        // Constrain x to container boundaries
+                        x = Math.max(0, Math.min(x, containerRect.width));
+                        
+                        // Update slider position
+                        comparisonSlider.style.left = x + 'px';
+                        
+                        // Update before/after visualization (in a real app, this would update canvas)
+                        const percent = (x / containerRect.width) * 100;
+                        // Here you would update canvas with the split at percent%
+                    }
+                    
+                    function handleMouseUp() {
+                        isDragging = false;
+                        document.removeEventListener('mousemove', handleMouseMove);
+                        document.removeEventListener('mouseup', handleMouseUp);
+                    }
+                    
+                    // Touch support for mobile
+                    comparisonSlider.addEventListener('touchstart', function(e) {
+                        isDragging = true;
+                        document.addEventListener('touchmove', handleTouchMove);
+                        document.addEventListener('touchend', handleTouchEnd);
+                    });
+                    
+                    function handleTouchMove(e) {
+                        if (!isDragging) return;
+                        
+                        const containerRect = comparisonContainer.getBoundingClientRect();
+                        let x = e.touches[0].clientX - containerRect.left;
+                        
+                        // Constrain x to container boundaries
+                        x = Math.max(0, Math.min(x, containerRect.width));
+                        
+                        // Update slider position
+                        comparisonSlider.style.left = x + 'px';
+                        
+                        // Update before/after visualization
+                        const percent = (x / containerRect.width) * 100;
+                    }
+                    
+                    function handleTouchEnd() {
+                        isDragging = false;
+                        document.removeEventListener('touchmove', handleTouchMove);
+                        document.removeEventListener('touchend', handleTouchEnd);
+                    }
+                }
+            }
+            
+            function showNotification(message) {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--primary);
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: var(--border-radius);
+                    box-shadow: var(--shadow);
+                    z-index: 1000;
+                    animation: fadeIn 0.3s ease-out;
+                    font-weight: 500;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                // Remove notification after 3 seconds
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.3s ease-out';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+                
+                // Add fadeOut animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes fadeOut {
+                        from { opacity: 1; }
+                        to { opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Initialize comparison slider (for demo purposes)
+            initComparisonSlider();
+        });
+    </script>
+</body>
+</html>
